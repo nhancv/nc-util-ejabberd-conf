@@ -219,9 +219,9 @@ BEGIN
   SET @NEW_PEER = SUBSTRING_INDEX(NEW.peer, '@', 1);
   SET @COUNT = (SELECT COUNT(*) FROM last_message WHERE (peer1 = NEW.username AND peer2 = @NEW_PEER) OR (peer2 = NEW.username AND peer1 = @NEW_PEER));
     IF @COUNT = 0 THEN
-        INSERT INTO last_message (peer1, peer2, txt) VALUES (NEW.username, @NEW_PEER, NEW.txt); 
+        INSERT INTO last_message (peer1, peer2, txt) VALUES (NEW.username, @NEW_PEER, NEW.xml); 
     ELSE
-      UPDATE last_message SET txt = NEW.txt WHERE peer1 = NEW.username AND peer2 = @NEW_PEER;
+      UPDATE last_message SET txt = NEW.xml WHERE (peer1 = NEW.username AND peer2 = @NEW_PEER) OR (peer2 = NEW.username AND peer1 = @NEW_PEER);
     END IF;
 END
 $$
@@ -236,7 +236,7 @@ BEGIN
   SET @OLD_PEER = SUBSTRING_INDEX(OLD.peer, '@', 1);
   SET @COUNT = (SELECT COUNT(*) FROM last_message WHERE (peer1 = OLD.username AND peer2 = @OLD_PEER) OR (peer2 = OLD.username AND peer1 = @OLD_PEER));
     IF @COUNT > 0 THEN
-        DELETE FROM `last_message` WHERE peer1 = OLD.username AND peer2 = @OLD_PEER;
+        DELETE FROM `last_message` WHERE (peer1 = OLD.username AND peer2 = @OLD_PEER) OR (peer2 = OLD.username AND peer1 = @OLD_PEER);
     END IF;
 END
 $$
