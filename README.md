@@ -8,6 +8,16 @@ Installation: https://docs.ejabberd.im/admin/installation/
 ```
 Note: username for login is <name>@<hostname>
 ```
+Other resource
+==================
+- https://github.com/nhancv/nc-ejabberd-extra
+- https://github.com/nhancv/nc-extra-ejabberd-api
+
+
+
+Config
+==================
+
 Open ejabberd server to public:
 https://www.ejabberd.im/node/17509
 
