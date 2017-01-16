@@ -252,9 +252,66 @@ END
 $$
 DELIMITER ;
 
+```
+---
+### Option last message with: insert/update with double record a->b and b->a, but delete with specific peer
+```sql
+--
+-- Table structure for table `last_message`
+--
+
+CREATE TABLE `last_message` (
+  `peer1` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `peer2` varchar(191) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `txt` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `last_message`
+  ADD PRIMARY KEY (`peer1`,`peer2`);
+
+-- before insert trigger
+
+DELIMITER $$
+CREATE TRIGGER `update_last_message` BEFORE INSERT ON `archive`
+FOR EACH ROW 
+BEGIN
+  SET @NEW_PEER = SUBSTRING_INDEX(NEW.peer, '@', 1);
+  SET @COUNT = (SELECT COUNT(*) FROM last_message WHERE peer1 = NEW.username AND peer2 = @NEW_PEER);
+    IF @COUNT = 0 THEN
+      INSERT INTO last_message (peer1, peer2, txt) VALUES (NEW.username, @NEW_PEER, NEW.xml); 
+    ELSE
+      UPDATE last_message SET txt = NEW.xml WHERE peer1 = NEW.username AND peer2 = @NEW_PEER;
+    END IF;
+
+  SET @COUNT = (SELECT COUNT(*) FROM last_message WHERE peer2 = NEW.username AND peer1 = @NEW_PEER);
+    IF @COUNT = 0 THEN 
+      INSERT INTO last_message (peer1, peer2, txt) VALUES (@NEW_PEER, NEW.username, NEW.xml); 
+    ELSE
+      UPDATE last_message SET txt = NEW.xml WHERE peer2 = NEW.username AND peer1 = @NEW_PEER;
+    END IF;
+
+END
+$$
+DELIMITER ;
+
+-- after delete trigger
+
+DELIMITER $$
+CREATE TRIGGER `delete_last_message` AFTER DELETE ON `archive`
+FOR EACH ROW 
+BEGIN
+  SET @OLD_PEER = SUBSTRING_INDEX(OLD.peer, '@', 1);
+  SET @COUNT = (SELECT COUNT(*) FROM last_message WHERE peer1 = OLD.username AND peer2 = @OLD_PEER AND txt = OLD.xml);
+    IF @COUNT > 0 THEN
+        DELETE FROM `last_message` WHERE peer1 = OLD.username AND peer2 = @OLD_PEER;
+    END IF;
+END
+$$
+DELIMITER ;
 
 ```
-
 
 
 Error:
